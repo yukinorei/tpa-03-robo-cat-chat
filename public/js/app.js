@@ -22,6 +22,13 @@ const getRandomInt = function(min, max) {
   return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 };
 
+const getOneEmoji = () => {
+  return fetch('https://ranmoji.herokuapp.com/emojis/api/v.1.0/')
+    .then(response => {
+      return response.json();
+    });
+};
+
 const catChatPhrases = [
   '可愛いすぎる！',
   'もう可愛くてたまらない〜',
@@ -31,9 +38,11 @@ const catChatPhrases = [
   'いい子、いい子。',
   'にゃんすた'
 ];
-const generateRandomCatChatPhrase = function() {
+const generateRandomCatChatPhrase = function(oneEmoji) {
   const randomIndex = getRandomInt(0, catChatPhrases.length);
-  return catChatPhrases[randomIndex];
+  const appendEmojiCount = getRandomInt(1, 5);
+  const emojis = oneEmoji.repeat(appendEmojiCount);
+  return catChatPhrases[randomIndex] + emojis;
 };
 
 // see https://market.mashape.com/blaazetech/robohash-image-generator
@@ -56,7 +65,7 @@ const generateRobotThumb = function() {
     });
 };
 
-const renderPost = function(robotThumbUrl, catThumbUrl, catChatPhrase) {
+const renderPost = function(robotThumbUrl, catThumbUrl, oneEmoji, catChatPhrase) {
   const containerEl = document.querySelector('#container .chats');
 
   // ポストの枠である要素
@@ -71,7 +80,7 @@ const renderPost = function(robotThumbUrl, catThumbUrl, catChatPhrase) {
   catThumbEl.src = catThumbUrl;
 
   const catChatPhraseEl = document.createElement('P');
-  catChatPhraseEl.innerText = generateRandomCatChatPhrase();
+  catChatPhraseEl.innerHTML = generateRandomCatChatPhrase(oneEmoji);
 
   // ポストの子要素を組み合わせる（次々と追加していく）
   postEl.appendChild(robotThumbEl);
@@ -86,15 +95,16 @@ const renderPost = function(robotThumbUrl, catThumbUrl, catChatPhrase) {
 const addPost = async function() {
   Promise.all([
     generateRobotThumb(),
-    generateCatThumb()
+    generateCatThumb(),
+    getOneEmoji(),
   ])
   .then(function(resultsArray) {
-    [robotThumb, catThumb] = resultsArray;
+    [robotThumb, catThumb, oneEmoji] = resultsArray;
     //　上の行はこの書き方の略、意味的に同じです：
     // const robotThumb = resultsArray[0];
     // const catThumb = resultsArray[1];
     // 「分割代入」と呼びます。https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
-    renderPost(robotThumb.imageUrl, catThumb[0].url, 'hello');
+    renderPost(robotThumb.imageUrl, catThumb[0].url, oneEmoji.emoji, 'hello');
   });
 };
 
